@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'scan_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +43,10 @@ class HomeScreen extends StatelessWidget {
               label: const Text('Scan Grocery Item'),
               onPressed: () {
                 // TODO: Navigate to scan screen
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScanScreen()),
+                  );
               },
             ),
             const SizedBox(height: 20),
