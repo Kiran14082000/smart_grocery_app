@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'results_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -75,16 +76,16 @@ class _ScanScreenState extends State<ScanScreen> {
         final data = json.decode(response.body);
         final detectedObjects = data['detected_objects'];
         final objectsList = (detectedObjects as List<dynamic>).join(', ');
-
         print('🧠 Detected objects: $objectsList');
-
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Detected: $objectsList'),
-              duration: const Duration(seconds: 4),
+          Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultsScreen(
+              detectedObjects: List<String>.from(detectedObjects),
             ),
-          );
+          ),
+        );
         }
       } else {
         print('❌ Upload failed with status: ${response.statusCode}');
