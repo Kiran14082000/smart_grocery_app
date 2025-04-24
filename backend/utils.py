@@ -3,6 +3,9 @@ from transformers import Blip2Processor, Blip2ForConditionalGeneration
 import torch
 import requests
 import json
+import os
+from google.cloud import vision
+from google.oauth2 import service_account
 
 
 
@@ -26,29 +29,41 @@ def classify_with_clip(image_path):
     print(f"🖼️ BLIP-2 generated caption: {caption}")
     return caption
 
-def classify_with_web(image_path):
-    print("🌍 Sending image to Bing Visual Search...")
 
-    headers = {
-        "Ocp-Apim-Subscription-Key": BING_API_KEY
-    }
+GOOGLE_CREDENTIALS_PATH = "credentials/google_vision.json"
 
-    with open(image_path, "rb") as img_file:
-        files = {
-            'image': ("image.jpg", img_file, "multipart/form-data")
-        }
+def classify_with_google_vision(image_path):
+    print("🌍 Using Google Cloud Vision...")
 
-        response = requests.post(BING_ENDPOINT, headers=headers, files=files)
-        response.raise_for_status()
+    # Load credentials and client
+    credentials = service_account.Credentials.from_service_account_file(GOOGLE_CREDENTIALS_PATH)
+    client = vision.ImageAnnotatorClient(credentials=credentials)
 
-        data = response.json()
-        print("✅ Bing response received")
+    # Load image
+    with open(image_path, "rb") as image_file:
+        content = image_file.read()
+    image = vision.Image(content=content)
 
-        # Extract best guess from tags or captions
-        tags = data.get("tags", [])
-        if tags:
-            display_name = tags[0].get("displayName", "")
-            print(f"🔍 Bing suggests: {display_name}")
-            return display_name
+    # Send request with both label + web detection
+    response = client.annotate_image({
+        "image": image,
+        "features": [
+            {"type_": vision.Feature.Type.LABEL_DETECTION},
+            {"type_": vision.Feature.Type.WEB_DETECTION}
+        ]
+    })
 
-        raise Exception("No tags found in Bing response")
+    # Try best guess from web detection
+    if response.web_detection and response.web_detection.best_guess_labels:
+        guess = response.web_detection.best_guess_labels[0].label
+        if guess:
+            print(f"🌐 Best guess from web: {guess}")
+            return guess
+
+    # Try first label if available
+    if response.label_annotations:
+        top_label = response.label_annotations[0].description
+        print(f"🏷️ Top label from labels: {top_label}")
+        return top_label
+
+    raise Exception("No useful data from Google Vision")
