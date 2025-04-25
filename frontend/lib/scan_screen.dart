@@ -60,7 +60,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final image = await _cameraController!.takePicture();
       print('📸 Captured image path: ${image.path}');
 
-      final uri = Uri.parse('http://192.168.2.102:5050/upload'); // 🔥 Mac IP
+      final uri = Uri.parse('http://192.168.2.102:5050/upload'); // update with your backend IP
 
       final request = http.MultipartRequest('POST', uri);
       request.files.add(await http.MultipartFile.fromPath(
@@ -77,15 +77,17 @@ class _ScanScreenState extends State<ScanScreen> {
         final detectedObjects = data['detected_objects'];
         final objectsList = (detectedObjects as List<dynamic>).join(', ');
         print('🧠 Detected objects: $objectsList');
+
         if (mounted) {
           Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResultsScreen(
-              detectedObjects: List<String>.from(detectedObjects),
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResultsScreen(
+                detectedItems: List<String>.from(detectedObjects),
+                source: 'Google Vision', // or "BLIP-2"
+              ),
             ),
-          ),
-        );
+          );
         }
       } else {
         print('❌ Upload failed with status: ${response.statusCode}');
