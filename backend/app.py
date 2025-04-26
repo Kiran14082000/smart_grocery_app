@@ -62,15 +62,28 @@ def upload_image():
 @app.route('/nutrition/<item_name>')
 def get_nutrition(item_name):
     try:
+        # First attempt: full item name
         search_url = f"https://api.spoonacular.com/food/ingredients/search?query={item_name}&apiKey={SPOONACULAR_API_KEY}"
-        search_response = requests.get(search_url)
-        search_data = search_response.json()
+        response = requests.get(search_url)
+        data = response.json()
 
-        if not search_data.get('results'):
-            return jsonify({"error": "No item found"}), 404
+        if data.get('results'):
+            item_id = data['results'][0]['id']
+        else:
+            # 🔥 No results - Try fallback
+            print(f"⚠️ Full name '{item_name}' not found, trying fallback...")
+            # Take last word (example: "saba banana" → "banana")
+            fallback_name = item_name.split()[-1]
+            fallback_search_url = f"https://api.spoonacular.com/food/ingredients/search?query={fallback_name}&apiKey={SPOONACULAR_API_KEY}"
+            fallback_response = requests.get(fallback_search_url)
+            fallback_data = fallback_response.json()
 
-        item_id = search_data['results'][0]['id']
+            if fallback_data.get('results'):
+                item_id = fallback_data['results'][0]['id']
+            else:
+                return jsonify({"error": "No nutrition found"}), 404
 
+        # Now get Nutrition Info
         nutrition_url = f"https://api.spoonacular.com/food/ingredients/{item_id}/information?amount=1&apiKey={SPOONACULAR_API_KEY}"
         nutrition_response = requests.get(nutrition_url)
         nutrition_data = nutrition_response.json()
@@ -84,19 +97,34 @@ def get_nutrition(item_name):
         print(f"❌ Nutrition fetch error: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # 🆕 API to get Recipes
 @app.route('/recipes/<item_name>')
 def get_recipes(item_name):
     try:
+        # First attempt: full item name
         recipe_url = f"https://api.spoonacular.com/recipes/complexSearch?query={item_name}&number=5&apiKey={SPOONACULAR_API_KEY}"
-        recipe_response = requests.get(recipe_url)
-        recipe_data = recipe_response.json()
+        response = requests.get(recipe_url)
+        data = response.json()
 
-        if not recipe_data.get('results'):
-            return jsonify({"error": "No recipes found"}), 404
+        if data.get('results'):
+            recipes_list = data['results']
+        else:
+            # 🔥 No results - Try fallback
+            print(f"⚠️ Full name '{item_name}' not found, trying fallback...")
+            fallback_name = item_name.split()[-1]
+            fallback_recipe_url = f"https://api.spoonacular.com/recipes/complexSearch?query={fallback_name}&number=5&apiKey={SPOONACULAR_API_KEY}"
+            fallback_response = requests.get(fallback_recipe_url)
+            fallback_data = fallback_response.json()
 
+            if fallback_data.get('results'):
+                recipes_list = fallback_data['results']
+            else:
+                return jsonify({"error": "No recipes found"}), 404
+
+        # Prepare the list to send back
         recipes = []
-        for recipe in recipe_data['results']:
+        for recipe in recipes_list:
             recipes.append({
                 "title": recipe.get('title', 'No Title'),
                 "instructions": f"https://spoonacular.com/recipes/{recipe['title'].replace(' ', '-')}-{recipe['id']}"
@@ -106,6 +134,7 @@ def get_recipes(item_name):
     except Exception as e:
         print(f"❌ Recipe fetch error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
