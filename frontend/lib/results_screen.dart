@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'nutrition_screen.dart';
+import 'recipe_list_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
   final List<String> detectedItems;
@@ -31,6 +33,44 @@ class _ResultsScreenState extends State<ResultsScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _showOptions(BuildContext context, String itemName) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.food_bank),
+              title: const Text('Get Nutritional Facts'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NutritionScreen(itemName: itemName),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.restaurant_menu),
+              title: const Text('Get Recipes'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeListScreen(itemName: itemName),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildAnimatedItem(String item, int index) {
@@ -76,7 +116,7 @@ class _ResultsScreenState extends State<ResultsScreen>
               trailing: const Icon(Icons.arrow_forward_ios,
                   size: 18, color: Colors.grey),
               onTap: () {
-                // Optional: expand or navigate
+                _showOptions(context, item);
               },
             ),
           ),
