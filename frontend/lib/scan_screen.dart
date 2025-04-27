@@ -17,6 +17,9 @@ class _ScanScreenState extends State<ScanScreen> {
   CameraController? _cameraController;
   Future<void>? _initializeControllerFuture;
 
+  // ✅ Keep a local list to store all detected items
+  List<String> allDetectedItems = [];
+
   @override
   void initState() {
     super.initState();
@@ -60,7 +63,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final image = await _cameraController!.takePicture();
       print('📸 Captured image path: ${image.path}');
 
-      final uri = Uri.parse('http://192.168.2.102:5050/upload'); // update with your backend IP
+      final uri = Uri.parse('http://192.168.2.102:5050/upload'); // <-- Update your backend IP
 
       final request = http.MultipartRequest('POST', uri);
       request.files.add(await http.MultipartFile.fromPath(
@@ -74,17 +77,22 @@ class _ScanScreenState extends State<ScanScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final detectedObjects = data['detected_objects'];
-        final objectsList = (detectedObjects as List<dynamic>).join(', ');
-        print('🧠 Detected objects: $objectsList');
+        final detectedObjects = List<String>.from(data['detected_objects']);
+        print('🧠 Detected objects: $detectedObjects');
+
+        // ✅ Add new detections to existing list
+        setState(() {
+          allDetectedItems.addAll(detectedObjects);
+        });
 
         if (mounted) {
+          // Navigate to ResultsScreen **and keep all detected items**
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => ResultsScreen(
-                detectedItems: List<String>.from(detectedObjects),
-                source: 'Google Vision', // or "BLIP-2"
+                detectedItems: allDetectedItems,
+                source: 'Smart Detection',
               ),
             ),
           );

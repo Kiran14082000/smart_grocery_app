@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:url_launcher/url_launcher.dart'; // Import the real url_launcher package
+import 'package:url_launcher/url_launcher.dart';
 
 class RecipeListScreen extends StatefulWidget {
   final String itemName;
@@ -15,30 +15,47 @@ class RecipeListScreen extends StatefulWidget {
 class _RecipeListScreenState extends State<RecipeListScreen> {
   List<dynamic>? recipes;
   bool isLoading = true;
+  bool noRecipesFound = false;
 
   @override
   void initState() {
     super.initState();
-    fetchRecipeData();
+    fetchRecipeData(widget.itemName);
   }
 
-  Future<void> fetchRecipeData() async {
-    final String url = 'http://192.168.2.102:5050/recipes/${widget.itemName}'; // <-- your Flask backend IP
+  Future<void> fetchRecipeData(String itemName) async {
+    final String url = 'http://192.168.2.102:5050/recipes/$itemName';
 
     try {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        setState(() {
-          recipes = json.decode(response.body);
-          isLoading = false;
-        });
+        List<dynamic> data = json.decode(response.body);
+
+        if (data.isEmpty || data.first is Map && data.first.containsKey('error')) {
+          // Try fallback
+          if (itemName.contains(' ')) {
+            String fallback = itemName.split(' ').last;
+            await fetchRecipeData(fallback);
+          } else {
+            setState(() {
+              noRecipesFound = true;
+              isLoading = false;
+            });
+          }
+        } else {
+          setState(() {
+            recipes = data;
+            isLoading = false;
+          });
+        }
       } else {
         throw Exception('Failed to load recipes');
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print('❌ Recipe Error: $e');
       setState(() {
+        noRecipesFound = true;
         isLoading = false;
       });
     }
@@ -53,8 +70,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : recipes == null
-              ? const Center(child: Text('No recipes found.'))
+          : noRecipesFound
+              ? const Center(child: Text('❌ No recipes found.\nYou can enjoy it fresh!', textAlign: TextAlign.center,))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: recipes!.length,
@@ -86,9 +103,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                                 mode: LaunchMode.externalApplication,
                               );
                             } else {
-                              print('❌ Could not launch $url');
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Could not open recipe')),
+                                SnackBar(content: Text('❌ Could not open recipe')),
                               );
                             }
                           }
