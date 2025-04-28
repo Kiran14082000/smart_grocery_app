@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scan_screen.dart';
-
+import 'splash_screen.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
 
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(), // 👈 START with SplashScreen now
     );
   }
 }
