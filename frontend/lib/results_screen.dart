@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'nutrition_screen.dart';
+import 'select_ingredients_screen.dart';
 import 'recipe_list_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
@@ -126,23 +127,46 @@ class _ResultsScreenState extends State<ResultsScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final items = widget.detectedItems;
+Widget build(BuildContext context) {
+  final items = widget.detectedItems;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detected Items'),
-        centerTitle: true,
-        backgroundColor: Colors.red,
-      ),
-      backgroundColor: const Color(0xFFF6F4FA),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return _buildAnimatedItem(items[index], index);
-        },
-      ),
-    );
-  }
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Detected Items'),
+      centerTitle: true,
+      backgroundColor: Colors.red,
+    ),
+    backgroundColor: const Color(0xFFF6F4FA),
+    body: Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return _buildAnimatedItem(items[index], index);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SelectIngredientsScreen(
+                    ingredients: items,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.restaurant),
+            label: const Text('Generate Recipe with Ingredients'),
+          ),
+        ),
+      ],
+    ),
+  );
 }
+    }

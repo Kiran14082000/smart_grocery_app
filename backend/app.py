@@ -135,6 +135,35 @@ def get_recipes(item_name):
         print(f"❌ Recipe fetch error: {e}")
         return jsonify({"error": str(e)}), 500
 
+# 🆕 API to generate a Recipe based on selected ingredients
+@app.route('/generate_recipe', methods=['POST'])
+def generate_recipe():
+    ingredients = request.json.get('ingredients', [])
+    if not ingredients:
+        return jsonify({"error": "No ingredients provided"}), 400
+
+    try:
+        query = ",".join(ingredients)
+        recipe_url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={query}&number=1&apiKey={SPOONACULAR_API_KEY}"
+        response = requests.get(recipe_url)
+        data = response.json()
+
+        if not data:
+            return jsonify({"error": "No recipe found"}), 404
+
+        # Return the first recipe
+        recipe = data[0]
+        return jsonify({
+            "title": recipe.get('title', 'Unknown'),
+            "id": recipe.get('id'),
+            "image": recipe.get('image'),
+            "usedIngredients": [i['name'] for i in recipe.get('usedIngredients', [])],
+            "missedIngredients": [i['name'] for i in recipe.get('missedIngredients', [])],
+        })
+    except Exception as e:
+        print(f"❌ Recipe generation error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
