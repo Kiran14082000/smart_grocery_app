@@ -3,6 +3,13 @@ import 'nutrition_screen.dart';
 import 'select_ingredients_screen.dart';
 import 'recipe_list_screen.dart';
 
+/// A screen that displays the results of detected items.
+/// It shows a list of detected items with options to get nutritional facts
+/// or recipes for each item.
+/// The screen also provides a button to generate a recipe using the detected ingredients.
+/// The screen is animated to provide a smooth transition effect when items are displayed.
+/// The screen takes a list of detected items and the source of detection as parameters.
+/// The source is defaulted to 'Google Vision' if not provided.
 class ResultsScreen extends StatefulWidget {
   final List<String> detectedItems;
   final String source;
