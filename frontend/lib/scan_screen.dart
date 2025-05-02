@@ -19,7 +19,6 @@ class _ScanScreenState extends State<ScanScreen> {
 
   // ✅ Keep a local list to store all detected items
   List<String> allDetectedItems = [];
-
   @override
   void initState() {
     super.initState();
