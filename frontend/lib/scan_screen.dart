@@ -18,6 +18,7 @@ class _ScanScreenState extends State<ScanScreen> {
   Future<void>? _initializeControllerFuture;
 
   // ✅ Keep a local list to store all detected items
+// ✅ This will be passed to ResultsScreen
   List<String> allDetectedItems = [];
   @override
   void initState() {
